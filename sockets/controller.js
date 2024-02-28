@@ -12,8 +12,6 @@ const socketHandler = (socket) => {
   })
 
   socket.on('attend-ticket', ({ desktop }, callback) => {
-    ticketsHandler.reset()
-
     const ticket = ticketsHandler.attendTicket(desktop)
 
     let answer = {
@@ -28,7 +26,7 @@ const socketHandler = (socket) => {
 
     callback(answer)
 
-    socket.broadcast.emit('last-ticket', ticketsHandler.lastTicket)
+    socket.broadcast.emit('last-ticket', ticketsHandler.toJSON)
   })
 }
 
