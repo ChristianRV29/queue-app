@@ -1,6 +1,8 @@
 const fs = require('fs')
 const path = require('path')
 
+const dbPath = path.join(__dirname, '../db/tickets.json')
+
 class Ticket {
   constructor(number, desktop) {
     this.number = number
@@ -10,45 +12,56 @@ class Ticket {
 
 class TicketsHandler {
   constructor() {
-    this.lastFour = []
-    this.lastTicket = null
+    this.lastTicketsAttended = []
+    this.currentTicket = null
     this.tickets = []
     this.today = new Date().getDate()
 
     this.init()
   }
 
-  get toJSON() {
-    return {
-      lastFour: this.lastFour,
-      lastTicket: this.lastTicket,
-      tickets: this.tickets,
-      today: this.today
-    }
-  }
-
   init() {
-    const data = require('../db/tickets.json')
+    if (!fs.existsSync(dbPath)) {
+      this.reset()
+      return
+    }
 
-    if (data && data.today === this.today) {
-      this.lastFour = data.lastFour
-      this.lastTicket = data.lastTicket
-      this.tickets = data.tickets
+    const data = JSON.parse(fs.readFileSync(dbPath, { encoding: 'utf-8' }))
+
+    if (data.today !== this.today) {
+      this.reset()
     } else {
+      this.lastTicketsAttended = data.lastTicketsAttended
+      this.tickets = data.tickets
+      this.today = data.today
+      this.currentTicket = data.currentTicket
+
       this.saveData()
     }
   }
 
   saveData() {
-    const dbPath = path.join(__dirname, '../db/tickets.json')
-
-    fs.writeFileSync(dbPath, JSON.stringify(this.toJSON))
+    fs.writeFileSync(dbPath, JSON.stringify(this.data))
   }
 
-  nextTicket() {
-    this.lastTicket += 1
+  reset() {
+    this.lastTicketsAttended = []
+    this.currentTicket = null
+    this.tickets = []
+    this.today = new Date().getDate()
 
-    const ticket = new Ticket(this.lastTicket, null)
+    this.saveData()
+  }
+
+  createTicket() {
+    let number = 1
+
+    if (this.lastTicket) {
+      number = this.lastTicket.number + 1
+    }
+
+    const ticket = new Ticket(number, null)
+
     this.tickets.push(ticket)
 
     this.saveData()
@@ -56,31 +69,40 @@ class TicketsHandler {
     return ticket
   }
 
-  reset() {
-    this.lastFour = []
-    this.lastTicket = 0
-    this.tickets = []
-
-    this.saveData()
-  }
-
   attendTicket(desktop) {
     if (this.tickets.length === 0) {
       return null
     }
 
-    const ticket = this.tickets.shift()
-    ticket.desktop = desktop
+    this.currentTicket = this.tickets.shift()
+    this.currentTicket.desktop = desktop
 
-    this.lastFour.unshift(ticket)
-
-    if (this.lastFour.length > 4) {
-      this.lastFour.splice(-1, 1)
+    if (this.lastTicketsAttended.length === 4) {
+      this.lastTicketsAttended.shift()
     }
+
+    this.lastTicketsAttended.push(this.currentTicket)
 
     this.saveData()
 
-    return ticket
+    return this.currentTicket
+  }
+
+  get data() {
+    return {
+      currentTicket: this.currentTicket,
+      lastTicketsAttended: this.lastTicketsAttended,
+      tickets: this.tickets,
+      today: this.today
+    }
+  }
+
+  get lastTicket() {
+    if (this.tickets.length === 0) {
+      return this.currentTicket
+    }
+
+    return this.tickets[this.tickets.length - 1]
   }
 }
 
