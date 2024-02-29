@@ -1,24 +1,22 @@
+const socket = io()
+
 const btnCreate = document.querySelector('button')
 const lblNewTicket = document.querySelector('#lblNuevoTicket')
 
-const socket = io()
-
 socket.on('connect', () => {
   btnCreate.disabled = false
+})
+
+socket.on('last-ticket', (payload) => {
+  lblNewTicket.innerHTML = `Ticket: ${payload.number}`
 })
 
 socket.on('disconnect', () => {
   btnCreate.disabled = true
 })
 
-socket.on('last-ticket', (lastTicket) => {
-  if (lastTicket) {
-    lblNewTicket.innerHTML = `Ticket: ${lastTicket}`
-  }
-})
-
 btnCreate.addEventListener('click', () => {
-  socket.emit('next-ticket', null, (ticket) => {
+  socket.emit('ticket-created', null, (ticket) => {
     lblNewTicket.innerHTML = `Ticket: ${ticket.number}`
   })
 })

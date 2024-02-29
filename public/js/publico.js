@@ -1,6 +1,7 @@
 const socket = io()
 
 const currentTicketLabel = document.querySelector('#lblTicket1')
+const currentDesktopLabel = document.querySelector('#lblEscritorio1')
 
 const lblTicket2 = document.querySelector('#lblTicket2')
 const lblTicket3 = document.querySelector('#lblTicket3')
@@ -10,17 +11,20 @@ const lblDesktop2 = document.querySelector('#lblEscritorio2')
 const lblDesktop3 = document.querySelector('#lblEscritorio3')
 const lblDesktop4 = document.querySelector('#lblEscritorio4')
 
-// socket.on('last-ticket', ({ lastFour, lastTicket }) => {
-//   currentTicketLabel.innerText = `Ticket ${lastTicket}`
+socket.on('tickets-data', (payload) => {
+  const { currentTicket, lastTicketsAttended } = payload
 
-//   const [second, third, fourth] = lastFour
+  const [ticket2, ticket3, ticket4] = lastTicketsAttended
 
-//   lblTicket2.innerText = `Ticket ${second.number}`
-//   lblDesktop2.innerText = second.desktop
+  currentTicketLabel.innerHTML = `Ticket: ${currentTicket.number}`
+  currentDesktopLabel.innerHTML = `Escritorio: ${currentTicket.desktop}`
 
-//   lblTicket3.innerText = `Ticket ${third.number}`
-//   lblDesktop3.innerText = third.desktop
+  lblTicket2.innerHTML = `Ticket: ${ticket2.number}`
+  lblDesktop2.innerHTML = `Escritorio: ${ticket2.desktop}`
 
-//   lblTicket4.innerText = `Ticket ${fourth.number}`
-//   lblDesktop4.innerText = fourth.desktop
-// })
+  lblTicket3.innerHTML = `Ticket: ${ticket3.number}`
+  lblDesktop3.innerHTML = `Escritorio: ${ticket3.desktop}`
+
+  lblTicket4.innerHTML = `Ticket: ${ticket4.number}`
+  lblDesktop4.innerHTML = `Escritorio: ${ticket4.desktop}`
+})
