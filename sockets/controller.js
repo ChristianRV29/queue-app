@@ -3,30 +3,33 @@ const TicketsHandler = require('../models/tickets')
 const ticketsHandler = new TicketsHandler()
 
 const socketHandler = (socket) => {
-  socket.emit('last-ticket', ticketsHandler.lastTicket)
+  socket.emit('tickets-data', ticketsHandler.data)
 
-  socket.on('next-ticket', (_, callback) => {
-    const newTicket = ticketsHandler.nextTicket()
+  socket.on('ticket-created', (_, callback) => {
+    const newTicket = ticketsHandler.createTicket()
 
     callback(newTicket)
+
+    socket.broadcast.emit('last-ticket', newTicket)
   })
 
   socket.on('attend-ticket', ({ desktop }, callback) => {
-    const ticket = ticketsHandler.attendTicket(desktop)
+    const ticketAttended = ticketsHandler.attendTicket(desktop)
 
-    let answer = {
-      ticket: null,
+    const payload = {
+      remaining: ticketsHandler.tickets.length,
       success: false,
-      remaining: ticketsHandler.tickets.length
+      ticket: null
     }
 
-    if (ticket) {
-      answer = { ...answer, ticket, success: true }
+    if (ticketAttended) {
+      payload.success = true
+      payload.ticket = ticketAttended
     }
 
-    callback(answer)
+    callback(payload)
 
-    socket.broadcast.emit('last-ticket', ticketsHandler.toJSON)
+    socket.broadcast.emit('tickets-data', ticketsHandler.data)
   })
 }
 
